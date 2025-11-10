@@ -1,0 +1,157 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Verify Document Authenticity</h1>
+      <p class="text-gray-600 mt-1">Enter verification code to check if a document is authentic</p>
+    </div>
+  </div>
+
+  <!-- Verification Form -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">Verify Document Authenticity</h2>
+    <p class="text-sm text-gray-600 mb-6">Enter the verification code (QR code, OTP, OVP, or OVC) to check if a document is authentic</p>
+    
+    <div class="space-y-4">
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Verification Code</label>
+        <input
+          type="text"
+          [(ngModel)]="verificationCode"
+          placeholder="Enter verification code (e.g., QR code, OTP, OVP, OVC)"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        />
+      </div>
+      
+      <button
+        (click)="verifyDocument()"
+        [disabled]="!verificationCode().trim() || loading()"
+        class="w-full px-6 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        @if (loading()) {
+          <span class="flex items-center justify-center">
+            <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Verifying...
+          </span>
+        } @else {
+          Verify
+        }
+      </button>
+    </div>
+
+    <!-- Verification Result -->
+    @if (verificationResult()) {
+      <div class="mt-6 p-4 rounded-lg" [class]="verificationResult().isValid ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'">
+        @if (verificationResult().isValid) {
+          <div class="flex items-start space-x-3">
+            <svg class="w-6 h-6 text-green-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3 class="font-semibold text-green-900">Document Verified Successfully</h3>
+              <div class="mt-2 space-y-1 text-sm text-green-800">
+                <p><strong>Document:</strong> {{ verificationResult().documentName }}</p>
+                <p><strong>Issuer:</strong> {{ verificationResult().issuer }}</p>
+                <p><strong>Issue Date:</strong> {{ verificationResult().issueDate | date }}</p>
+                <p><strong>Status:</strong> {{ verificationResult().status }}</p>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="flex items-start space-x-3">
+            <svg class="w-6 h-6 text-red-600 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+              <h3 class="font-semibold text-red-900">Verification Failed</h3>
+              <p class="mt-1 text-sm text-red-800">{{ verificationResult().error }}</p>
+            </div>
+          </div>
+        }
+        
+        <button
+          (click)="resetVerification()"
+          class="mt-4 px-4 py-2 bg-gray-600 text-white rounded-lg text-sm font-medium hover:bg-gray-700 transition-colors"
+        >
+          Verify Another Document
+        </button>
+      </div>
+    }
+  </div>
+
+  <!-- My Document QR Codes -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">My Document QR Codes</h2>
+    <p class="text-sm text-gray-600 mb-6">View QR codes for quick verification of your documents</p>
+    
+    @if (myDocuments().length > 0) {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        @for (doc of myDocuments(); track doc.id) {
+          <div class="text-center p-4 border border-gray-200 rounded-lg">
+            <div class="w-24 h-24 mx-auto mb-3 bg-gray-100 border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
+              <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+            </div>
+            <h3 class="font-medium text-gray-900 text-sm mb-1">{{ doc.originalFileName }}</h3>
+            <p class="text-xs text-gray-600 mb-2 capitalize">{{ doc.category }}</p>
+            <span [class]="doc.status === 'verified' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'" class="px-2 py-1 text-xs font-medium rounded">
+              {{ doc.status }}
+            </span>
+            <div class="mt-3">
+              <button class="text-xs text-blue-600 hover:text-blue-700 font-medium">View QR Code</button>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="text-center py-8">
+        <p class="text-gray-600">No documents available for QR code generation</p>
+      </div>
+    }
+  </div>
+
+  <!-- SMS Verification Test -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <h2 class="text-lg font-semibold text-gray-900 mb-4">SMS Verification Test</h2>
+    <p class="text-sm text-gray-600 mb-6">Test the SMS verification functionality</p>
+    
+    @if (!showSMSTest()) {
+      <button
+        (click)="sendSMSCode()"
+        class="px-6 py-3 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+      >
+        Send Test SMS Code
+      </button>
+    } @else {
+      <div class="space-y-4">
+        <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p class="text-sm text-blue-800">SMS verification code sent to your registered mobile number</p>
+          <p class="text-xs text-blue-600 mt-1">Demo code: 123456</p>
+        </div>
+        
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-2">Enter SMS Code</label>
+          <div class="flex space-x-2">
+            <input
+              type="text"
+              [(ngModel)]="smsCode"
+              placeholder="Enter 6-digit code"
+              maxlength="6"
+              class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              (click)="verifySMSCode()"
+              class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+            >
+              Verify
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+</div>

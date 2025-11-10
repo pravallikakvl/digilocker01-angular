@@ -1,0 +1,325 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Transfer Requests</h1>
+      <p class="text-gray-600 mt-1">Manage incoming and outgoing student transfer requests</p>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <!-- Search -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-gray-700 mb-2">Search Requests</label>
+        <div class="relative">
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="onSearchChange()"
+            placeholder="Search by student name, roll number, or institute..."
+            class="w-full px-4 py-3 pl-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <svg class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+        </div>
+      </div>
+
+      <!-- Status Filter -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-2">Status</label>
+        <select
+          [(ngModel)]="selectedStatus"
+          (ngModelChange)="onStatusChange()"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value="all">All Status</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+          <option value="completed">Completed</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incoming Transfer Requests -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Incoming Transfer Requests ({{ filteredRequests().length }})</h2>
+      <p class="text-sm text-gray-600 mt-1">Students requesting to transfer to your institution</p>
+    </div>
+    
+    @if (filteredRequests().length > 0) {
+      <div class="divide-y divide-gray-200">
+        @for (request of filteredRequests(); track request.id) {
+          <div class="p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-3">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                    <span class="text-white font-medium text-sm">{{ request.studentName.charAt(0) }}</span>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-gray-900">{{ request.studentName }}</h3>
+                    <p class="text-sm text-gray-600">{{ request.rollNumber }} • {{ request.studentEmail }}</p>
+                  </div>
+                  <span [class]="getStatusColor(request.status)" class="px-3 py-1 text-xs font-medium rounded-full capitalize flex items-center space-x-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getStatusIcon(request.status)" />
+                    </svg>
+                    <span>{{ request.status }}</span>
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">From Institute</label>
+                    <p class="text-sm text-gray-900 mt-1">{{ request.fromInstitute }}</p>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Course & Year</label>
+                    <p class="text-sm text-gray-900 mt-1">{{ request.course }} - {{ request.year }}</p>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</label>
+                    <p class="text-sm text-gray-900 mt-1">{{ formatDate(request.requestDate) }}</p>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Reason</label>
+                  <p class="text-sm text-gray-700">{{ request.reason }}</p>
+                </div>
+
+                <div class="flex items-center space-x-2 mb-4">
+                  <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Documents:</label>
+                  @for (doc of request.documents; track doc) {
+                    <span class="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">{{ doc }}</span>
+                  }
+                </div>
+
+                @if (request.comments) {
+                  <div class="bg-gray-50 rounded-lg p-3 mb-4">
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Comments</label>
+                    <p class="text-sm text-gray-700">{{ request.comments }}</p>
+                    @if (request.responseDate) {
+                      <p class="text-xs text-gray-500 mt-1">Response Date: {{ formatDate(request.responseDate) }}</p>
+                    }
+                  </div>
+                }
+              </div>
+
+              <div class="flex items-center space-x-3 ml-6">
+                <button
+                  (click)="viewDetails(request)"
+                  class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  View Details
+                </button>
+                @if (request.status === 'pending') {
+                  <button
+                    (click)="approveRequest(request)"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    (click)="rejectRequest(request)"
+                    class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                  >
+                    Reject
+                  </button>
+                }
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="text-center py-16">
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-4">
+          <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        </div>
+        <h3 class="text-xl font-semibold text-gray-900 mb-2">No transfer requests found</h3>
+        <p class="text-gray-600 mb-6">No incoming transfer requests match your current filters</p>
+      </div>
+    }
+  </div>
+
+  <!-- Outgoing Transfer Requests -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200">
+    <div class="px-6 py-4 border-b border-gray-200">
+      <h2 class="text-lg font-semibold text-gray-900">Outgoing Transfer Requests ({{ outgoingRequests().length }})</h2>
+      <p class="text-sm text-gray-600 mt-1">Students transferring from your institution</p>
+    </div>
+    
+    @if (outgoingRequests().length > 0) {
+      <div class="divide-y divide-gray-200">
+        @for (request of outgoingRequests(); track request.id) {
+          <div class="p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center space-x-3 mb-3">
+                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-pink-600 flex items-center justify-center">
+                    <span class="text-white font-medium text-sm">{{ request.studentName.charAt(0) }}</span>
+                  </div>
+                  <div>
+                    <h3 class="font-semibold text-gray-900">{{ request.studentName }}</h3>
+                    <p class="text-sm text-gray-600">{{ request.rollNumber }} • {{ request.studentEmail }}</p>
+                  </div>
+                  <span [class]="getStatusColor(request.status)" class="px-3 py-1 text-xs font-medium rounded-full capitalize flex items-center space-x-1">
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" [attr.d]="getStatusIcon(request.status)" />
+                    </svg>
+                    <span>{{ request.status }}</span>
+                  </span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">To Institute</label>
+                    <p class="text-sm text-gray-900 mt-1">{{ request.toInstitute }}</p>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Course & Year</label>
+                    <p class="text-sm text-gray-900 mt-1">{{ request.course }} - {{ request.year }}</p>
+                  </div>
+                  <div>
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider">Request Date</label>
+                    <p class="text-sm text-gray-900 mt-1">{{ formatDate(request.requestDate) }}</p>
+                  </div>
+                </div>
+
+                @if (request.comments) {
+                  <div class="bg-gray-50 rounded-lg p-3">
+                    <label class="block text-xs font-medium text-gray-500 uppercase tracking-wider mb-1">Status</label>
+                    <p class="text-sm text-gray-700">{{ request.comments }}</p>
+                  </div>
+                }
+              </div>
+
+              <div class="flex items-center space-x-3 ml-6">
+                <button
+                  (click)="viewDetails(request)"
+                  class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors"
+                >
+                  View Details
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    } @else {
+      <div class="text-center py-8">
+        <p class="text-gray-600">No outgoing transfer requests</p>
+      </div>
+    }
+  </div>
+
+  <!-- Details Modal -->
+  @if (showDetailsModal() && selectedRequest()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-2xl font-bold text-gray-900">Transfer Request Details</h2>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Student Information -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Student Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Full Name</label>
+                <p class="text-sm text-gray-900 mt-1">{{ selectedRequest()?.studentName }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Email</label>
+                <p class="text-sm text-gray-900 mt-1">{{ selectedRequest()?.studentEmail }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Roll Number</label>
+                <p class="text-sm text-gray-900 mt-1">{{ selectedRequest()?.rollNumber }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Course & Year</label>
+                <p class="text-sm text-gray-900 mt-1">{{ selectedRequest()?.course }} - {{ selectedRequest()?.year }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Transfer Information -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Transfer Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700">From Institute</label>
+                <p class="text-sm text-gray-900 mt-1">{{ selectedRequest()?.fromInstitute }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">To Institute</label>
+                <p class="text-sm text-gray-900 mt-1">{{ selectedRequest()?.toInstitute }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Request Date</label>
+                <p class="text-sm text-gray-900 mt-1">{{ formatDate(selectedRequest()?.requestDate) }}</p>
+              </div>
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Status</label>
+                <span [class]="getStatusColor(selectedRequest()?.status || '')" class="inline-block px-2 py-1 text-xs font-medium rounded-full capitalize mt-1">
+                  {{ selectedRequest()?.status }}
+                </span>
+              </div>
+            </div>
+            <div class="mt-4">
+              <label class="block text-sm font-medium text-gray-700">Reason for Transfer</label>
+              <p class="text-sm text-gray-900 mt-1">{{ selectedRequest()?.reason }}</p>
+            </div>
+          </div>
+
+          <!-- Documents -->
+          <div class="bg-gray-50 rounded-lg p-4">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Required Documents</h3>
+            <div class="space-y-2">
+              @for (doc of selectedRequest()?.documents || []; track doc) {
+                <div class="flex items-center space-x-2">
+                  <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-sm text-gray-900">{{ doc }}</span>
+                </div>
+              }
+            </div>
+          </div>
+
+          @if (selectedRequest()?.comments) {
+            <div class="bg-gray-50 rounded-lg p-4">
+              <h3 class="text-lg font-semibold text-gray-900 mb-4">Comments</h3>
+              <p class="text-sm text-gray-700">{{ selectedRequest()?.comments }}</p>
+              @if (selectedRequest()?.responseDate) {
+                @if (selectedRequest()?.responseDate) {
+                  <p class="text-xs text-gray-500 mt-2">Response Date: {{ formatDate(selectedRequest()?.responseDate) }}</p>
+                }
+              }
+            </div>
+          }
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex items-center justify-end">
+          <button
+            (click)="closeModal()"
+            class="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

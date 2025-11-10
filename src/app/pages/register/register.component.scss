@@ -1,0 +1,44 @@
+// Additional styles for register component
+.register-container {
+  min-height: 100vh;
+}
+
+.form-field {
+  transition: all 0.3s ease;
+}
+
+.form-field:focus {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+}
+
+.role-button {
+  transition: all 0.2s ease;
+}
+
+.role-button:hover {
+  transform: translateY(-1px);
+}
+
+.submit-button {
+  transition: all 0.3s ease;
+}
+
+.submit-button:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.error-message {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

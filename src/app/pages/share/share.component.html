@@ -1,0 +1,182 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Share Documents</h1>
+      <p class="text-gray-600 mt-1">Generate secure links and QR codes to share your documents</p>
+    </div>
+  </div>
+
+  <!-- Documents List -->
+  @if (documents().length > 0) {
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="px-6 py-4 border-b border-gray-200">
+        <h2 class="text-lg font-semibold text-gray-900">Your Documents</h2>
+      </div>
+      
+      <div class="divide-y divide-gray-200">
+        @for (doc of documents(); track doc.id) {
+          <div class="p-6 hover:bg-gray-50 transition-colors">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <h3 class="font-semibold text-gray-900 mb-1">{{ doc.originalFileName }}</h3>
+                <div class="flex items-center space-x-4 text-sm text-gray-600">
+                  <span class="capitalize">{{ doc.category }}</span>
+                  <span>{{ formatFileSize(doc.fileSize) }}</span>
+                  <span>{{ formatDate(doc.uploadDate) }}</span>
+                  <span [class]="doc.status === 'verified' ? 'text-green-600' : 'text-yellow-600'" class="font-medium">
+                    {{ doc.status }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="flex items-center space-x-3">
+                <button
+                  (click)="shareDocument(doc)"
+                  class="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                >
+                  Share Document
+                </button>
+                <button
+                  (click)="generateQRCode(doc)"
+                  class="px-4 py-2 bg-indigo-600 text-white rounded-lg font-medium hover:bg-indigo-700 transition-colors"
+                >
+                  QR Code
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  } @else {
+    <div class="text-center py-16">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-4">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">No documents to share</h3>
+      <p class="text-gray-600 mb-6">Upload some documents first to start sharing</p>
+    </div>
+  }
+
+  <!-- Share Modal -->
+  @if (showShareModal()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-md w-full">
+        <div class="p-6 border-b border-gray-200">
+          <h2 class="text-xl font-bold text-gray-900">Share Document</h2>
+          <p class="text-sm text-gray-600 mt-1">{{ selectedDocument()?.originalFileName }}</p>
+        </div>
+
+        <div class="p-6 space-y-6">
+          <!-- Expiry Duration -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Expiry Duration</label>
+            <select
+              [(ngModel)]="expiryDuration"
+              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="1">1 Day</option>
+              <option value="7">7 Days</option>
+              <option value="30">30 Days</option>
+              <option value="90">90 Days</option>
+            </select>
+          </div>
+
+          <!-- Share Code -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Share Code (QR)</label>
+            <div class="flex items-center space-x-2">
+              <input
+                type="text"
+                [value]="shareCode()"
+                readonly
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-gray-50"
+              />
+              <button
+                (click)="copyShareCode()"
+                class="px-4 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <!-- Share URL -->
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Share Link</label>
+            <div class="flex items-center space-x-2">
+              <input
+                type="text"
+                [value]="shareUrl()"
+                readonly
+                class="flex-1 px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-sm"
+              />
+              <button
+                (click)="copyShareUrl()"
+                class="px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Copy
+              </button>
+            </div>
+          </div>
+
+          <!-- QR Code Preview -->
+          <div class="text-center">
+            <div class="inline-block p-4 bg-gray-100 rounded-lg">
+              <div class="w-32 h-32 bg-white border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
+                <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+                </svg>
+              </div>
+            </div>
+            <p class="text-xs text-gray-500 mt-2">QR Code for {{ shareCode() }}</p>
+          </div>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex justify-end">
+          <button
+            (click)="closeModal()"
+            class="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- QR Code Modal -->
+  @if (showQRCode()) {
+    <div class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl max-w-sm w-full">
+        <div class="p-6 border-b border-gray-200 text-center">
+          <h2 class="text-xl font-bold text-gray-900">Document QR Code</h2>
+          <p class="text-sm text-gray-600 mt-1">{{ selectedDocument()?.originalFileName }}</p>
+        </div>
+
+        <div class="p-6 text-center">
+          <div class="inline-block p-6 bg-gray-100 rounded-lg">
+            <div class="w-48 h-48 bg-white border-2 border-dashed border-gray-300 rounded flex items-center justify-center">
+              <svg class="w-24 h-24 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" />
+              </svg>
+            </div>
+          </div>
+          <p class="text-sm text-gray-600 mt-4">Scan this QR code to verify the document</p>
+        </div>
+
+        <div class="p-6 border-t border-gray-200 flex justify-end">
+          <button
+            (click)="closeModal()"
+            class="px-6 py-3 bg-gray-600 text-white rounded-lg font-medium hover:bg-gray-700 transition-colors"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  }
+</div>

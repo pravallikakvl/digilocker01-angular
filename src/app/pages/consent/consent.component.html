@@ -1,0 +1,97 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Consent Requests</h1>
+      <p class="text-gray-600 mt-1">Manage access requests to your documents</p>
+    </div>
+  </div>
+
+  <!-- Consent Requests List -->
+  @if (consentRequests().length > 0) {
+    <div class="space-y-4">
+      @for (request of consentRequests(); track request.requestId) {
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div class="flex items-start justify-between">
+            <div class="flex-1">
+              <div class="flex items-center space-x-3 mb-3">
+                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center">
+                  <span class="text-white font-medium text-sm">{{ request.requestedByName.charAt(0) }}</span>
+                </div>
+                <div>
+                  <h3 class="font-semibold text-gray-900">{{ request.requestedByName }}</h3>
+                  <p class="text-sm text-gray-600">{{ request.requestedBy }}</p>
+                </div>
+                <span [class]="getStatusColor(request.status)" class="px-3 py-1 text-xs font-medium rounded-full capitalize">
+                  {{ request.status }}
+                </span>
+              </div>
+
+              <div class="bg-gray-50 rounded-lg p-4 mb-4">
+                <div class="flex items-center space-x-2 mb-2">
+                  <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span class="font-medium text-gray-900">{{ getDocumentName(request.documentId) }}</span>
+                </div>
+                <p class="text-sm text-gray-600">Requesting access to view this document</p>
+              </div>
+
+              <div class="flex items-center space-x-6 text-sm text-gray-600">
+                <div class="flex items-center space-x-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span>Requested: {{ formatDate(request.requestedAt) }}</span>
+                </div>
+                <div class="flex items-center space-x-1">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Expires: {{ formatDate(request.expiresAt) }}</span>
+                </div>
+              </div>
+            </div>
+
+            @if (request.status === 'pending') {
+              <div class="flex items-center space-x-3 ml-6">
+                <button
+                  (click)="approveRequest(request)"
+                  [disabled]="loading()"
+                  class="px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                >
+                  Approve
+                </button>
+                <button
+                  (click)="rejectRequest(request)"
+                  [disabled]="loading()"
+                  class="px-4 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50"
+                >
+                  Reject
+                </button>
+              </div>
+            } @else {
+              <div class="ml-6">
+                <div class="text-sm text-gray-600">
+                  @if (request.responseAt) {
+                    <span>Responded: {{ formatDate(request.responseAt) }}</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="text-center py-16">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gray-100 mb-4">
+        <svg class="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0113 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      </div>
+      <h3 class="text-xl font-semibold text-gray-900 mb-2">No consent requests</h3>
+      <p class="text-gray-600 mb-6">You don't have any pending consent requests at the moment</p>
+    </div>
+  }
+</div>
